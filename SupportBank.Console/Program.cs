@@ -95,8 +95,9 @@ namespace SupportBank.Console
             }
         }
 
-        private static void ImportFile(string filePath)
+        private static void ImportFile(string fileName)
         {
+            string filePath = "../../../" + fileName;
             if (filePath.Length < 4)
             {
                 throw new Exception("Wrong file extension");
@@ -120,6 +121,17 @@ namespace SupportBank.Console
             }
 
             ApplyTransactions();
+        }
+
+        private static void ExportFile(string fileName)
+        {
+            string filePath = "../../../" + fileName + ".csv";
+
+            using (var writer = new StreamWriter(filePath))
+            using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+            {
+                csv.WriteRecords(transactions);
+            }
         }
 
         private static void PrintTransactions()
@@ -163,15 +175,28 @@ namespace SupportBank.Console
                 }
                 else if (input.Length > 12 && input.Substring(0, 12) == "Import File ")
                 {
-                    string filePath = input.Substring(12);
+                    string fileName = input.Substring(12);
                     try
                     {
-                        ImportFile(filePath);
+                        ImportFile(fileName);
                     }
                     catch (Exception e)
                     {
                         System.Console.WriteLine("Couldn't parse file.");
-                        logger.Error("Wrong file path: " + filePath);
+                        logger.Error("Wrong file name: " + fileName);
+                    }
+                }
+                else if (input.Length > 12 && input.Substring(0, 12) == "Export File ")
+                {
+                    string fileName = input.Substring(12);
+                    try
+                    {
+                        ExportFile(fileName);
+                    }
+                    catch (Exception e)
+                    {
+                        System.Console.WriteLine("Couldn't export file.");
+                        logger.Error("Couldn't export file: " + fileName + ". " + e.Message);
                     }
                 }
                 else System.Console.WriteLine("Wrong command");
