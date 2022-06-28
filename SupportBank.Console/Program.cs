@@ -18,12 +18,14 @@ namespace SupportBank.Console
         private static Dictionary<string, Person> people = new Dictionary<string, Person>();
         private static List<Transaction> transactions = new List<Transaction>();
 
+        // Prints everyone's balance
         private static void ListAll()
         {
             foreach (var person in people)
                 System.Console.WriteLine(person.Key + ": " + Math.Round(person.Value.Balance, 2));
         }
 
+        // Prints name's transactions 
         private static void ListAccount(string name)
         {
             if (!people.ContainsKey(name))
@@ -39,88 +41,107 @@ namespace SupportBank.Console
             }
         }
 
-        private static void ParseCSV(string filePath)
+        private static List<Transaction> ParseCSV(string filePath)
         {
             logger.Debug("Parsing CSV file " + filePath);
+            List<Transaction> newTransactions = new List<Transaction>();
+
             using (var reader = new StreamReader(filePath))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
                 // parse records and ignore invalid transactions
-                transactions = csv.GetRecords<Transaction>().Where(x => x.Amount != 0).ToList();
+                newTransactions = csv.GetRecords<Transaction>().Where(x => x.Amount != 0).ToList();
             }
+
+            return newTransactions;
         }
 
-        private static void ParseJSON(string filePath)
+        private static List<Transaction> ParseJSON(string filePath)
         {
             logger.Debug("Parsing JSON file " + filePath);
-            string json = File.ReadAllText(filePath);
-            JArray transactionsJSON = JArray.Parse(json);
+            List<Transaction> newTransactions = new List<Transaction>();
 
+            string jsonString = File.ReadAllText(filePath);
+            JArray transactionsJSON = JArray.Parse(jsonString);
             List<JToken> tokens = transactionsJSON.Children().ToList();
 
             foreach (var token in tokens)
             {
-                string date = token["Date"].ToString();
-                string fromAccount = token["FromAccount"].ToString();
-                string toAccount = token["ToAccount"].ToString();
-                string narrative = token["Narrative"].ToString();
-                string amount = token["Amount"].ToString();
+                // read transaction data
+                string date = token["Date"]?.ToString();
+                string fromAccount = token["FromAccount"]?.ToString();
+                string toAccount = token["ToAccount"]?.ToString();
+                string narrative = token["Narrative"]?.ToString();
+                string amount = token["Amount"]?.ToString();
 
+                // build transaction object
                 Transaction transaction = new Transaction(date, fromAccount, toAccount, narrative, amount);
+
+                // validate transaction
                 if (transaction.Amount != 0)
-                    transactions.Add(transaction);
+                    newTransactions.Add(transaction);
             }
+
+            return newTransactions;
         }
 
-        private static void ParseXML(string filePath)
+        private static List<Transaction> ParseXML(string filePath)
         {
             logger.Debug("Parsing XML file " + filePath);
+            List<Transaction> newTransactions = new List<Transaction>();
+
             XmlDocument doc = new XmlDocument();
             doc.Load(filePath);
+            if (doc.DocumentElement?.ChildNodes == null) return null;
 
             foreach (XmlNode node in doc.DocumentElement.ChildNodes)
             {
+                // read transaction data
                 string from = node.SelectSingleNode("Parties/From")?.InnerText;
                 string to = node.SelectSingleNode("Parties/To")?.InnerText;
                 string narrative = node.SelectSingleNode("Description")?.InnerText;
                 string amount = node.SelectSingleNode("Value")?.InnerText;
 
-                double oaDate;
-                double.TryParse(node.Attributes["Date"].InnerText, out oaDate);
-                string date = DateTime.FromOADate(oaDate).ToString();
+                double.TryParse(node.Attributes["Date"].InnerText, out var oaDate);
+                string date = DateTime.FromOADate(oaDate).ToString("dd/MM/yyyy");
 
+                // build transaction object
                 Transaction transaction = new Transaction(date, from, to, narrative, amount);
+
+                // validate transaction
                 if (transaction.Amount != 0)
-                    transactions.Add(transaction);
+                    newTransactions.Add(transaction);
             }
+
+            return newTransactions;
         }
 
+        // Imports and applies all transactions from file
         private static void ImportFile(string fileName)
         {
             string filePath = "../../../" + fileName;
-            if (filePath.Length < 4)
-            {
-                throw new Exception("Wrong file extension");
-            }
 
+            // if too short to have a valid extension
+            if (filePath.Length < 4) throw new Exception("Wrong file extension");
+
+            List<Transaction> newTransactions;
             string fileExtension = filePath.Substring(filePath.Length - 4).ToLower();
-
             switch (fileExtension)
             {
                 case ".csv":
-                    ParseCSV(filePath);
+                    newTransactions = ParseCSV(filePath);
                     break;
                 case "json":
-                    ParseJSON(filePath);
+                    newTransactions = ParseJSON(filePath);
                     break;
                 case ".xml":
-                    ParseXML(filePath);
+                    newTransactions = ParseXML(filePath);
                     break;
                 default:
                     throw new Exception("Wrong file extension");
             }
 
-            ApplyTransactions();
+            ApplyTransactions(newTransactions);
         }
 
         private static void ExportFile(string fileName)
@@ -137,14 +158,12 @@ namespace SupportBank.Console
         private static void PrintTransactions()
         {
             foreach (var transaction in transactions)
-            {
                 System.Console.WriteLine(transaction.ToString());
-            }
         }
 
-        private static void ApplyTransactions()
+        private static void ApplyTransactions(List<Transaction> newTransactions)
         {
-            foreach (var transaction in transactions)
+            foreach (var transaction in newTransactions)
             {
                 if (!people.ContainsKey(transaction.From))
                     people.Add(transaction.From, new Person());
@@ -153,13 +172,18 @@ namespace SupportBank.Console
 
                 people[transaction.From].Pay(people[transaction.To], transaction.Amount);
             }
+
+            // Concatenate new and old transactions
+            transactions.AddRange(newTransactions);
         }
 
         private static void UserConsole()
         {
             System.Console.WriteLine(
                 "Commands:\n\"List All\" -> outputs the names of each person and their balance\n" +
-                "\"List [Name]\" -> prints a list of every transaction for the account with this name");
+                "\"List [Name]\" -> prints a list of every transaction for the account with this name\n" +
+                "\"Import File [filename]\" -> Reads and applies all transactions from file\n" +
+                "\"Export File [filename]\" -> Writes all applied transactions to file");
 
             string input;
             while ((input = System.Console.ReadLine()) != null && input.Length > 0)
@@ -183,7 +207,7 @@ namespace SupportBank.Console
                     catch (Exception e)
                     {
                         System.Console.WriteLine("Couldn't parse file.");
-                        logger.Error("Wrong file name: " + fileName);
+                        logger.Error("Wrong file name: " + fileName + ". " + e.Message);
                     }
                 }
                 else if (input.Length > 12 && input.Substring(0, 12) == "Export File ")
