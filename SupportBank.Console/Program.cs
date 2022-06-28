@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Xml;
 using CsvHelper;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -70,6 +72,25 @@ namespace SupportBank.Console
             }
         }
 
+        private static void ParseXML(string filePath)
+        {
+            logger.Debug("Parsing XML file " + filePath);
+            XmlDocument doc = new XmlDocument();
+            doc.Load(filePath);
+
+            foreach (XmlNode node in doc.DocumentElement.ChildNodes)
+            {
+                string date = DateTime.Today.ToString("dd/MM/yyyy");
+                string from = node.SelectSingleNode("Parties/From")?.InnerText;
+                string to = node.SelectSingleNode("Parties/To")?.InnerText;
+                string narrative = node.SelectSingleNode("Description")?.InnerText;
+                string amount = node.SelectSingleNode("Value")?.InnerText;
+
+                Transaction transaction = new Transaction(date, from, to, narrative, amount);
+                transactions.Add(transaction);
+            }
+        }
+
         private static void PrintTransactions()
         {
             foreach (var transaction in transactions)
@@ -101,7 +122,9 @@ namespace SupportBank.Console
             while ((input = System.Console.ReadLine()) != null && input.Length > 0)
             {
                 if (input == "List All")
+                {
                     ListAll();
+                }
                 else if (input.Length > 5 && input.Substring(0, 5) == "List ")
                 {
                     string name = input.Substring(5);
@@ -123,12 +146,13 @@ namespace SupportBank.Console
             LogManager.Configuration = config;
 
             // ParseCSV("../../../DodgyTransactions2015.csv");
-            ParseJSON("../../../Transactions2013.json");
+            // ParseJSON("../../../Transactions2013.json");
+            ParseXML("../../../Transactions2012.xml");
 
-            PrintTransactions();
-            // ApplyTransactions();
+            // PrintTransactions();
+            ApplyTransactions();
 
-            // UserConsole();
+            UserConsole();
         }
     }
 }
