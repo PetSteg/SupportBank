@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using CsvHelper;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Config;

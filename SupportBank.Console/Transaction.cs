@@ -1,5 +1,4 @@
 using System;
-using Microsoft.SqlServer.Server;
 using NLog;
 
 namespace SupportBank.Console
