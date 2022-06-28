@@ -87,8 +87,7 @@ namespace SupportBank.Console
                 if (!people.ContainsKey(transaction.To))
                     people.Add(transaction.To, new Person());
 
-                people[transaction.From].Balance -= transaction.Amount;
-                people[transaction.To].Balance += transaction.Amount;
+                people[transaction.From].Pay(people[transaction.To], transaction.Amount);
             }
         }
 

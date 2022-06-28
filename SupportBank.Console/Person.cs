@@ -10,5 +10,11 @@ namespace SupportBank.Console
         }
 
         public double Balance { get; set; }
+
+        public void Pay(Person p, double amount)
+        {
+            Balance -= amount;
+            p.Balance += amount;
+        }
     }
 }
