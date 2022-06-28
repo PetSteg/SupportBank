@@ -21,7 +21,7 @@ namespace SupportBank.Console
         private static void ListAll()
         {
             foreach (var person in people)
-                System.Console.WriteLine(person.Key + ": " + person.Value.Balance);
+                System.Console.WriteLine(person.Key + ": " + Math.Round(person.Value.Balance, 2));
         }
 
         private static void ListAccount(string name)
@@ -67,7 +67,8 @@ namespace SupportBank.Console
                 string amount = token["Amount"].ToString();
 
                 Transaction transaction = new Transaction(date, fromAccount, toAccount, narrative, amount);
-                transactions.Add(transaction);
+                if (transaction.Amount != 0)
+                    transactions.Add(transaction);
             }
         }
 
@@ -79,15 +80,46 @@ namespace SupportBank.Console
 
             foreach (XmlNode node in doc.DocumentElement.ChildNodes)
             {
-                string date = DateTime.Today.ToString("dd/MM/yyyy");
                 string from = node.SelectSingleNode("Parties/From")?.InnerText;
                 string to = node.SelectSingleNode("Parties/To")?.InnerText;
                 string narrative = node.SelectSingleNode("Description")?.InnerText;
                 string amount = node.SelectSingleNode("Value")?.InnerText;
 
+                double oaDate;
+                double.TryParse(node.Attributes["Date"].InnerText, out oaDate);
+                string date = DateTime.FromOADate(oaDate).ToString();
+
                 Transaction transaction = new Transaction(date, from, to, narrative, amount);
-                transactions.Add(transaction);
+                if (transaction.Amount != 0)
+                    transactions.Add(transaction);
             }
+        }
+
+        private static void ImportFile(string filePath)
+        {
+            if (filePath.Length < 4)
+            {
+                throw new Exception("Wrong file extension");
+            }
+
+            string fileExtension = filePath.Substring(filePath.Length - 4).ToLower();
+
+            switch (fileExtension)
+            {
+                case ".csv":
+                    ParseCSV(filePath);
+                    break;
+                case "json":
+                    ParseJSON(filePath);
+                    break;
+                case ".xml":
+                    ParseXML(filePath);
+                    break;
+                default:
+                    throw new Exception("Wrong file extension");
+            }
+
+            ApplyTransactions();
         }
 
         private static void PrintTransactions()
@@ -129,6 +161,19 @@ namespace SupportBank.Console
                     string name = input.Substring(5);
                     ListAccount(name);
                 }
+                else if (input.Length > 12 && input.Substring(0, 12) == "Import File ")
+                {
+                    string filePath = input.Substring(12);
+                    try
+                    {
+                        ImportFile(filePath);
+                    }
+                    catch (Exception e)
+                    {
+                        System.Console.WriteLine("Couldn't parse file.");
+                        logger.Error("Wrong file path: " + filePath);
+                    }
+                }
                 else System.Console.WriteLine("Wrong command");
             }
         }
@@ -143,13 +188,6 @@ namespace SupportBank.Console
             config.AddTarget("File Logger", target);
             config.LoggingRules.Add(new LoggingRule("*", LogLevel.Debug, target));
             LogManager.Configuration = config;
-
-            // ParseCSV("../../../DodgyTransactions2015.csv");
-            // ParseJSON("../../../Transactions2013.json");
-            ParseXML("../../../Transactions2012.xml");
-
-            // PrintTransactions();
-            ApplyTransactions();
 
             UserConsole();
         }
