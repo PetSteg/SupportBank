@@ -1,3 +1,5 @@
+using NLog;
+
 namespace SupportBank.Console
 {
     public class Person
