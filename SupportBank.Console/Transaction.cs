@@ -23,14 +23,12 @@ namespace SupportBank.Console
 
             // amount is 0 for invalid transactions
             // parse amount
-            double amount;
-            if (!double.TryParse(Amount, out amount))
+            if (!double.TryParse(Amount, out var amount))
                 logger.Error("Wrong amount format");
             this.Amount = amount;
 
             // parse date
-            DateTime date;
-            DateTime.TryParse(Date, out date);
+            DateTime.TryParse(Date, out var date);
             this.Date = date;
             if (date == DateTime.MinValue)
             {
