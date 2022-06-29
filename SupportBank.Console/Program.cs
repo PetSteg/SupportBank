@@ -93,12 +93,12 @@ namespace SupportBank.Console
                 {
                     ListAll();
                 }
-                else if (input.Length > 5 && input.Substring(0, 5) == "List ")
+                else if (input.StartsWith("List "))
                 {
                     string name = input.Substring(5);
                     ListAccount(name);
                 }
-                else if (input.Length > 12 && input.Substring(0, 12) == "Import File ")
+                else if (input.StartsWith("Import File "))
                 {
                     string fileName = input.Substring(12);
                     try
@@ -111,7 +111,7 @@ namespace SupportBank.Console
                         logger.Error("Wrong file name: " + fileName + ". " + e.Message);
                     }
                 }
-                else if (input.Length > 12 && input.Substring(0, 12) == "Export File ")
+                else if (input.StartsWith("Export File "))
                 {
                     string fileName = input.Substring(12);
                     try
