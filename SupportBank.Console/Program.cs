@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Xml;
 using CsvHelper;
-using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
@@ -41,92 +39,15 @@ namespace SupportBank.Console
             }
         }
 
-        private static List<Transaction> ParseCSV(string filePath)
-        {
-            logger.Debug("Parsing CSV file " + filePath);
-
-            using (var reader = new StreamReader(filePath))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                // parse records and ignore invalid transactions
-                return csv.GetRecords<Transaction>().Where(x => x.Amount != 0).ToList();
-            }
-        }
-
-        private static List<Transaction> ParseJSON(string filePath)
-        {
-            logger.Debug("Parsing JSON file " + filePath);
-            List<Transaction> newTransactions = new List<Transaction>();
-
-            string jsonString = File.ReadAllText(filePath);
-            JArray transactionsJSON = JArray.Parse(jsonString);
-            List<JToken> tokens = transactionsJSON.Children().ToList();
-
-            foreach (var token in tokens)
-            {
-                // read transaction data
-                string date = token["Date"]?.ToString();
-                string fromAccount = token["FromAccount"]?.ToString();
-                string toAccount = token["ToAccount"]?.ToString();
-                string narrative = token["Narrative"]?.ToString();
-                string amount = token["Amount"]?.ToString();
-
-                // build transaction object
-                Transaction transaction = new Transaction(date, fromAccount, toAccount, narrative, amount);
-
-                // validate transaction
-                if (transaction.Amount != 0)
-                    newTransactions.Add(transaction);
-            }
-
-            return newTransactions;
-        }
-
-        private static List<Transaction> ParseXML(string filePath)
-        {
-            logger.Debug("Parsing XML file " + filePath);
-            List<Transaction> newTransactions = new List<Transaction>();
-
-            XmlDocument doc = new XmlDocument();
-            doc.Load(filePath);
-            if (doc.DocumentElement?.ChildNodes == null) return null;
-
-            foreach (XmlNode node in doc.DocumentElement.ChildNodes)
-            {
-                // read transaction data
-                string from = node.SelectSingleNode("Parties/From")?.InnerText;
-                string to = node.SelectSingleNode("Parties/To")?.InnerText;
-                string narrative = node.SelectSingleNode("Description")?.InnerText;
-                string amount = node.SelectSingleNode("Value")?.InnerText;
-
-                double.TryParse(node.Attributes["Date"].InnerText, out var oaDate);
-                string date = DateTime.FromOADate(oaDate).ToString("dd/MM/yyyy");
-
-                // build transaction object
-                Transaction transaction = new Transaction(date, from, to, narrative, amount);
-
-                // validate transaction
-                if (transaction.Amount != 0)
-                    newTransactions.Add(transaction);
-            }
-
-            return newTransactions;
-        }
-
         // Imports and applies all transactions from file
         private static void ImportFile(string fileName)
         {
             string filePath = "../../../" + fileName;
-            List<Transaction> newTransactions;
 
-            if (fileName.EndsWith(".csv"))
-                newTransactions = ParseCSV(filePath);
-            else if (fileName.EndsWith(".json"))
-                newTransactions = ParseJSON(filePath);
-            else if (fileName.EndsWith(".xml"))
-                newTransactions = ParseXML(filePath);
-            else throw new Exception("Wrong file extension");
+            // create the right InputParser
+            IInputParser inputParser = new InputParserFactory().GetInputParser(filePath);
 
+            List<Transaction> newTransactions = inputParser.ParseInput(filePath);
             ApplyTransactions(newTransactions);
         }
 
@@ -139,12 +60,6 @@ namespace SupportBank.Console
             {
                 csv.WriteRecords(transactions);
             }
-        }
-
-        private static void PrintTransactions()
-        {
-            foreach (var transaction in transactions)
-                System.Console.WriteLine(transaction.ToString());
         }
 
         private static void ApplyTransactions(List<Transaction> newTransactions)
