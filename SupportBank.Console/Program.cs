@@ -43,18 +43,18 @@ namespace SupportBank.Console
         // Imports and applies all transactions from file
         private static void ImportFile(string fileName)
         {
-            string filePath = "../../../" + fileName;
+            var filePath = "../../../" + fileName;
 
             // create the right InputParser
-            IInputParser inputParser = new InputParserFactory().GetInputParser(filePath);
+            var inputParser = new InputParserFactory().GetInputParser(filePath);
 
-            List<Transaction> newTransactions = inputParser.ParseInput(filePath);
+            var newTransactions = inputParser.ParseInput(filePath);
             ApplyTransactions(newTransactions);
         }
 
         private static void ExportFile(string fileName)
         {
-            string filePath = "../../../" + fileName + ".csv";
+            var filePath = "../../../" + fileName + ".csv";
 
             using (var writer = new StreamWriter(filePath))
             using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
@@ -96,12 +96,12 @@ namespace SupportBank.Console
                 }
                 else if (input.StartsWith("List "))
                 {
-                    string name = input.Substring(5);
+                    var name = input.Substring(5);
                     ListAccount(name);
                 }
                 else if (input.StartsWith("Import File "))
                 {
-                    string fileName = input.Substring(12);
+                    var fileName = input.Substring(12);
                     try
                     {
                         ImportFile(fileName);
@@ -114,7 +114,7 @@ namespace SupportBank.Console
                 }
                 else if (input.StartsWith("Export File "))
                 {
-                    string fileName = input.Substring(12);
+                    var fileName = input.Substring(12);
                     try
                     {
                         ExportFile(fileName);
