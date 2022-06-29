@@ -5,7 +5,7 @@ using System.Linq;
 using CsvHelper;
 using NLog;
 
-namespace SupportBank.Console
+namespace SupportBank.Console.InputParser
 {
     public class CsvParser : IInputParser
     {

@@ -1,6 +1,6 @@
 using System;
 
-namespace SupportBank.Console
+namespace SupportBank.Console.InputParser
 {
     public class InputParserFactory
     {

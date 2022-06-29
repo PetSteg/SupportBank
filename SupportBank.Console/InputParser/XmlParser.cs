@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Xml;
 using NLog;
 
-namespace SupportBank.Console
+namespace SupportBank.Console.InputParser
 {
     public class XmlParser : IInputParser
     {

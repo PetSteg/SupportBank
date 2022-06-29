@@ -7,6 +7,7 @@ using CsvHelper;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
+using SupportBank.Console.InputParser;
 
 namespace SupportBank.Console
 {

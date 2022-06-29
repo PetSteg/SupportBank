@@ -4,7 +4,7 @@ using System.Linq;
 using Newtonsoft.Json.Linq;
 using NLog;
 
-namespace SupportBank.Console
+namespace SupportBank.Console.InputParser
 {
     public class JsonParser : IInputParser
     {

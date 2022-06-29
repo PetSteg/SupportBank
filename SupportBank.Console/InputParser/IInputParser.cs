@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace SupportBank.Console
+namespace SupportBank.Console.InputParser
 {
     public interface IInputParser
     {
