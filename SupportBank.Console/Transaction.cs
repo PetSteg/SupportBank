@@ -7,6 +7,12 @@ namespace SupportBank.Console
     {
         private static readonly ILogger logger = LogManager.GetCurrentClassLogger();
 
+        public DateTime Date { get; }
+        public string From { get; }
+        public string To { get; }
+        public string Narrative { get; }
+        public double Amount { get; }
+
         public Transaction(String Date, string From, string To, string Narrative, string Amount)
         {
             logger.Debug(Date + "," + From + "," + To + "," + Narrative + "," + Amount);
@@ -32,12 +38,6 @@ namespace SupportBank.Console
                 this.Amount = 0;
             }
         }
-
-        public DateTime Date { get; }
-        public string From { get; }
-        public string To { get; }
-        public string Narrative { get; }
-        public double Amount { get; }
 
         public override string ToString()
         {

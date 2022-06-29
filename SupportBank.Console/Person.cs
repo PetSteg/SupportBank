@@ -9,10 +9,10 @@ namespace SupportBank.Console
             Balance = 0;
         }
 
-        public void Pay(Person p, double amount)
+        public void Pay(Person person, double amount)
         {
             Balance -= amount;
-            p.Balance += amount;
+            person.Balance += amount;
         }
     }
 }

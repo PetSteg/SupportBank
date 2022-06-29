@@ -44,7 +44,6 @@ namespace SupportBank.Console
         private static List<Transaction> ParseCSV(string filePath)
         {
             logger.Debug("Parsing CSV file " + filePath);
-            List<Transaction> newTransactions = new List<Transaction>();
 
             using (var reader = new StreamReader(filePath))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
