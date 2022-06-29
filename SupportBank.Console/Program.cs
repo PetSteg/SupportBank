@@ -50,10 +50,8 @@ namespace SupportBank.Console
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
                 // parse records and ignore invalid transactions
-                newTransactions = csv.GetRecords<Transaction>().Where(x => x.Amount != 0).ToList();
+                return csv.GetRecords<Transaction>().Where(x => x.Amount != 0).ToList();
             }
-
-            return newTransactions;
         }
 
         private static List<Transaction> ParseJSON(string filePath)
@@ -120,26 +118,15 @@ namespace SupportBank.Console
         private static void ImportFile(string fileName)
         {
             string filePath = "../../../" + fileName;
-
-            // if too short to have a valid extension
-            if (filePath.Length < 4) throw new Exception("Wrong file extension");
-
             List<Transaction> newTransactions;
-            string fileExtension = filePath.Substring(filePath.Length - 4).ToLower();
-            switch (fileExtension)
-            {
-                case ".csv":
-                    newTransactions = ParseCSV(filePath);
-                    break;
-                case "json":
-                    newTransactions = ParseJSON(filePath);
-                    break;
-                case ".xml":
-                    newTransactions = ParseXML(filePath);
-                    break;
-                default:
-                    throw new Exception("Wrong file extension");
-            }
+
+            if (fileName.EndsWith(".csv"))
+                newTransactions = ParseCSV(filePath);
+            else if (fileName.EndsWith(".json"))
+                newTransactions = ParseJSON(filePath);
+            else if (fileName.EndsWith(".xml"))
+                newTransactions = ParseXML(filePath);
+            else throw new Exception("Wrong file extension");
 
             ApplyTransactions(newTransactions);
         }
