@@ -66,6 +66,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="InputParser\CsvParser.cs" />
+    <Compile Include="InputParser\IInputParser.cs" />
+    <Compile Include="InputParser\InputParserFactory.cs" />
+    <Compile Include="InputParser\JsonParser.cs" />
+    <Compile Include="InputParser\XmlParser.cs" />
     <Compile Include="Person.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
